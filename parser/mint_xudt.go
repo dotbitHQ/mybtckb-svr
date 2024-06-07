@@ -2,6 +2,7 @@ package parser
 
 import (
 	"fmt"
+	log "github.com/sirupsen/logrus"
 	"github.com/status-im/keycard-go/hexutils"
 	"mybtckb-svr/lib/common"
 	"mybtckb-svr/lib/contract"
@@ -9,7 +10,10 @@ import (
 )
 
 func (b *BlockParser) MintXudt(req FuncTransactionHandleReq) error {
-
+	if len(req.TxTypeData.OutputCell.Unique) == 0 {
+		log.Warn("mint tx without unique cell, tx hash: ", req.TxHash)
+		return nil
+	}
 	xudtInfo, err := contract.ParseXudtInfo(req.TxTypeData.OutputCell.Unique[0].OutputData)
 	if err != nil {
 		return fmt.Errorf("contract.ParseXudtInfo err: %s", err.Error())
