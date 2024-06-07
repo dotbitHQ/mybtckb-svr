@@ -1,0 +1,21 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "声明（可不写）",
+        "title": "标题",
+        "termsOfService": "https://www.test.com",
+        "contact": {
+            "name": "www.test.com",
+            "url": "https://www.test.com",
+            "email": "me@test.me"
+        },
+        "license": {
+            "name": "Apache 2.0 (必填)",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+        },
+        "version": "2.0 (版本)"
+    },
+    "host": "127.0.0.1:8132",
+    "basePath": "/v1",
+    "paths": {}
+}

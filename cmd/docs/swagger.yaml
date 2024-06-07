@@ -1,0 +1,16 @@
+basePath: /v1
+host: 127.0.0.1:8132
+info:
+  contact:
+    email: me@test.me
+    name: www.test.com
+    url: https://www.test.com
+  description: 声明（可不写）
+  license:
+    name: Apache 2.0 (必填)
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: https://www.test.com
+  title: 标题
+  version: 2.0 (版本)
+paths: {}
+swagger: "2.0"
