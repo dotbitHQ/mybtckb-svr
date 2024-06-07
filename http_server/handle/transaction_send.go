@@ -90,6 +90,15 @@ func (h *HttpHandle) doRecordTx(sic *txbuilder.SignInfoCache, txHash string) err
 			SporeId:        sic.TransferSpore.SporeId,
 		}
 		return h.DbDao.CreateSporeTransferRecord(sporeTransferRecord)
+	case contract.ActionTransferCkb:
+		ckbTransferRecord := &tables.CkbTransferRecord{
+			TxHash:         txHash,
+			Address:        sic.TransferCkb.Address,
+			ReceiptAddress: sic.TransferCkb.ReceiptAddress,
+			Amount:         sic.TransferCkb.Amount,
+		}
+		return h.DbDao.CreateCkbTransferRecord(ckbTransferRecord)
 	}
+
 	return nil
 }

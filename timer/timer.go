@@ -41,20 +41,35 @@ func NewTxTimer(p TxTimerParam) *TxTimer {
 }
 
 func (t *TxTimer) Run() error {
-	return nil
-	tickerTxStatus := time.NewTicker(time.Second * 5)
-	tickerSyncCluster := time.NewTicker(time.Second * 10)
-	tickerSyncSpore := time.NewTicker(time.Second * 10)
+
+	tickerXudtTxStatus := time.NewTicker(time.Second * 5)
+	tickerSporeTxStatus := time.NewTicker(time.Second * 5)
+	tickerCkbTxStatus := time.NewTicker(time.Second * 5)
+
+	tickerSyncCluster := time.NewTicker(time.Minute * 10)
+	tickerSyncSpore := time.NewTicker(time.Minute * 12)
 	t.wg.Add(1)
 	go func() {
 		for {
 			select {
-			case <-tickerTxStatus.C:
+			case <-tickerXudtTxStatus.C:
 				log.Debug("doCheckTxStatus start ...")
 				if err := t.doCheckXudtTxStatus(); err != nil {
 					log.Error("doCheckTxStatus err: ", err.Error())
 				}
 				log.Debug("doCheckTxStatus end ...")
+			case <-tickerCkbTxStatus.C:
+				log.Debug("doCheckCkbTxStatus start ...")
+				if err := t.doCheckCkbTxStatus(); err != nil {
+					log.Error("doCheckCkbTxStatus err: ", err.Error())
+				}
+				log.Debug("doCheckCkbTxStatus end ...")
+			case <-tickerSporeTxStatus.C:
+				log.Debug("doCheckSporeTxStatus start ...")
+				if err := t.doCheckSporeTxStatus(); err != nil {
+					log.Error("doCheckSporeTxStatus err: ", err.Error())
+				}
+				log.Debug("doCheckSporeTxStatus end ...")
 			case <-tickerSyncCluster.C:
 				log.Debug("doSyncCluster start ...")
 				if err := t.doSyncCluster(); err != nil {

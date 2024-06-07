@@ -75,3 +75,37 @@ func (t *TxTimer) doCheckSporeTxStatus() error {
 	}
 	return nil
 }
+
+func (t *TxTimer) doCheckCkbTxStatus() error {
+	pendingCkbTransferRecords, err := t.dbDao.GetPendingCkbTransferRecord()
+	if err != nil {
+		return fmt.Errorf("GetPendingXudtTransferRecord err : ", err.Error())
+	}
+	for _, v := range pendingCkbTransferRecords {
+		res, err := t.contracts.Client().GetTransaction(context.Background(), types.HexToHash(v.TxHash))
+		if err != nil {
+			log.Warn("GetTransaction err: ", err.Error())
+			continue
+		}
+
+		ckbTransferRecord := &tables.CkbTransferRecord{
+			TxHash: res.Transaction.Hash.Hex(),
+		}
+		if res.TxStatus.Status == types.TransactionStatusCommitted {
+			if res.TxStatus.Status == types.TransactionStatusCommitted {
+				if block, err := t.contracts.Client().GetBlock(t.ctx, *res.TxStatus.BlockHash); err == nil && block != nil && block.Header != nil {
+					log.Info("UpdatePendingToConfirm:", v.Id)
+					ckbTransferRecord.BlockNum = block.Header.Number
+					ckbTransferRecord.BlockTimestamp = block.Header.Timestamp
+					ckbTransferRecord.Status = tables.StatusConfirm
+				}
+			}
+		} else if res.TxStatus.Status == types.TransactionStatusRejected {
+			ckbTransferRecord.Status = tables.StatusRejected
+		}
+		if err := t.dbDao.UpdateCkbTransferRecord(ckbTransferRecord); err != nil {
+			return fmt.Errorf("UpdateSporeTransferRecord err : %s", err.Error())
+		}
+	}
+	return nil
+}

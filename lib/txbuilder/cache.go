@@ -26,6 +26,7 @@ type SignInfoCache struct {
 	Action          string              `json:"action"`
 	TransferXudt    *TransferXudtCache  `json:"transfer_xudt"`
 	TransferSpore   *TransferSporeCache `json:"transfer_spore"`
+	TransferCkb     *TransferCkbCache   `json:"transfer_ckb"`
 	TransactionBase *TransactionBase    `json:"builder_tx"`
 }
 
@@ -45,6 +46,12 @@ type TransferSporeCache struct {
 	Address        string `json:"address"`
 	ReceiptAddress string `json:"receipt_address"`
 	SporeId        string `json:"spore_id"`
+}
+
+type TransferCkbCache struct {
+	Address        string `json:"address"`
+	ReceiptAddress string `json:"receipt_address"`
+	Amount         uint64 `json:"amount"`
 }
 
 func (d *TxBuilder) GenSignInfo(sic *SignInfoCache) (*SignInfoList, error) {

@@ -11,6 +11,7 @@ const (
 	ActionMintXudt      Action = "mint_xudt"
 	ActionTransferXudt  Action = "transfer_xudt"
 	ActionTransferSpore Action = "transfer_spore"
+	ActionTransferCkb   Action = "transfer_ckb"
 )
 
 type CellData struct {

@@ -20,6 +20,8 @@ func (h *HttpServer) initRouter() {
 		v1.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 		v1.POST("/transfer/xudt/record", h.H.TransferXudtRecord)
+		v1.POST("/transfer/spore/record", h.H.TransferSporeRecord)
+		v1.POST("/transfer/ckb/record", h.H.TransferCkbRecord)
 
 		v1.POST("/user/xudt/list", h.H.UserXudtList)
 		v1.POST("/user/cluster/list", h.H.UserClusterList)
@@ -27,7 +29,7 @@ func (h *HttpServer) initRouter() {
 		v1.POST("/user/spore/list", h.H.UserSporeList)
 		v1.POST("/transfer/xudt", h.H.TransferXudt)
 		v1.POST("/transfer/spore", h.H.TransferSpore)
-
+		v1.POST("/transfer/ckb", h.H.TransferCkb)
 		v1.POST("/transaction/send", h.H.TransactionSend)
 
 	}

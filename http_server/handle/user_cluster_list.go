@@ -22,6 +22,7 @@ type ClusterInfo struct {
 	ClusterId   string `json:"cluster_id"`
 	Name        string `json:"name"`
 	Description string `json:"description"`
+	SporesNum   uint64 `json:"spores_num"`
 	Outpoint    string `json:"outpoint"`
 	BlockNum    uint64 `json:"block_num"`
 }

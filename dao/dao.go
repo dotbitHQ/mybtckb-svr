@@ -35,6 +35,8 @@ func NewGormDB(conf config.DbMysql) (*DbDao, error) {
 		&tables.TableXudt{},
 		&tables.TransactionInfo{},
 		&tables.XudtTransferRecord{},
+		&tables.CkbTransferRecord{},
+		&tables.SporeTransferRecord{},
 	); err != nil {
 		return nil, err
 	}
