@@ -16,16 +16,16 @@ func HexToLittleEndianHex(bytes []byte) (string, error) {
 	return littleEndianHex, nil
 }
 func GetOutpointByargs(args []byte) (index uint32, txHash string) {
-	fmt.Println(args)
+	//fmt.Println(args)
 	// 将字节数组转换为整数
 	index = binary.LittleEndian.Uint32(args[:4])
-	fmt.Println(index)
+	//fmt.Println(index)
 
 	txHash, err := HexToLittleEndianHex(args[4:])
 	if err != nil {
 		fmt.Printf("Error: %s\n", err)
 		return
 	}
-	fmt.Println(txHash)
+	//fmt.Println(txHash)
 	return
 }

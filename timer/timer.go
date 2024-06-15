@@ -41,8 +41,9 @@ func NewTxTimer(p TxTimerParam) *TxTimer {
 }
 
 func (t *TxTimer) Run() error {
-	//if err := t.doSyncSpore(); err != nil {
-	//	log.Error("doSyncSpore err: ", err.Error())
+
+	//if err := t.doSyncRgbppSporeAddr(); err != nil {
+	//	log.Error("doSyncRgbppSporeAddr err: ", err.Error())
 	//}
 	//return nil
 	tickerXudtTxStatus := time.NewTicker(time.Second * 5)
@@ -51,6 +52,8 @@ func (t *TxTimer) Run() error {
 
 	tickerSyncCluster := time.NewTicker(time.Minute * 10)
 	tickerSyncSpore := time.NewTicker(time.Minute * 12)
+	tickerSyncRgbppSporeAddr := time.NewTicker(time.Second * 20)
+
 	t.wg.Add(1)
 	go func() {
 		for {
@@ -85,10 +88,17 @@ func (t *TxTimer) Run() error {
 					log.Error("doSyncSpore err: ", err.Error())
 				}
 				log.Debug("doSyncSpore end ...")
+			case <-tickerSyncRgbppSporeAddr.C:
+				log.Debug("doSyncRgbppSporeAddr start ...")
+				if err := t.doSyncRgbppSporeAddr(); err != nil {
+					log.Error("doSyncRgbppSporeAddr err: ", err.Error())
+				}
+				log.Debug("doSyncRgbppSporeAddr end ...")
 			case <-t.ctx.Done():
 				log.Debug("timer done")
 				t.wg.Done()
 				return
+
 			}
 		}
 	}()

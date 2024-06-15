@@ -60,7 +60,18 @@ func runServer(ctx *cli.Context) error {
 
 	// ============= service start =============
 
-	contracts, err := contract.Init(ctxServer, &wgServer, configFilePath)
+	// redis
+	red, err := toolib.NewRedisClient(config.Cfg.DB.Redis.Addr, config.Cfg.DB.Redis.Password, config.Cfg.DB.Redis.DbNum)
+	if err != nil {
+		return fmt.Errorf("NewRedisClient err:%s", err.Error())
+	} else {
+		log.Info("redis ok")
+	}
+	rc := &cache.RedisCache{
+		Ctx: ctxServer,
+		Red: red,
+	}
+	contracts, err := contract.Init(ctxServer, &wgServer, configFilePath, rc)
 	if err != nil {
 		return err
 	}
@@ -102,18 +113,6 @@ func runServer(ctx *cli.Context) error {
 	)
 	if err := blockParser.Run(); err != nil {
 		return err
-	}
-
-	// redis
-	red, err := toolib.NewRedisClient(config.Cfg.DB.Redis.Addr, config.Cfg.DB.Redis.Password, config.Cfg.DB.Redis.DbNum)
-	if err != nil {
-		return fmt.Errorf("NewRedisClient err:%s", err.Error())
-	} else {
-		log.Info("redis ok")
-	}
-	rc := &cache.RedisCache{
-		Ctx: ctxServer,
-		Red: red,
 	}
 
 	txTimer := timer.NewTxTimer(timer.TxTimerParam{

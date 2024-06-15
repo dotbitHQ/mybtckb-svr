@@ -5,6 +5,7 @@ import (
 	"github.com/btcsuite/btcd/rpcclient"
 	"log"
 	"mybtckb-svr/config"
+	"mybtckb-svr/lib/cache"
 	"mybtckb-svr/lib/contract"
 	"mybtckb-svr/lib/outpoint_cache"
 
@@ -15,7 +16,7 @@ import (
 	"time"
 )
 
-func Init(ctx context.Context, wg *sync.WaitGroup, configPath string) (*contract.Contracts, error) {
+func Init(ctx context.Context, wg *sync.WaitGroup, configPath string, rc *cache.RedisCache) (*contract.Contracts, error) {
 	logrus.SetOutput(os.Stdout)
 	if err := config.InitCfg(configPath); err != nil {
 		return nil, err
@@ -46,6 +47,7 @@ func Init(ctx context.Context, wg *sync.WaitGroup, configPath string) (*contract
 		contract.WithWaitGroup(wg),
 		contract.WithCkbClient(ckbCli),
 		contract.WithBtcClient(*btcClient),
+		contract.WithRedisClient(rc),
 		contract.WithNetType(config.Cfg.Server.Net),
 		contract.WithCache(txCache),
 	)

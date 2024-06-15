@@ -14,6 +14,7 @@ import (
 	"github.com/nervosnetwork/ckb-sdk-go/rpc"
 	"github.com/nervosnetwork/ckb-sdk-go/types"
 	log "github.com/sirupsen/logrus"
+	"mybtckb-svr/lib/cache"
 	"mybtckb-svr/lib/common"
 	"mybtckb-svr/lib/outpoint_cache"
 	"sync"
@@ -27,11 +28,18 @@ var (
 
 type ContractsOption func(*Contracts)
 
+func WithRedisClient(rc *cache.RedisCache) ContractsOption {
+	return func(dc *Contracts) {
+		dc.rc = rc
+	}
+}
+
 func WithCkbClient(client rpc.Client) ContractsOption {
 	return func(dc *Contracts) {
 		dc.client = client
 	}
 }
+
 func WithBtcClient(client rpcclient.Client) ContractsOption {
 	return func(dc *Contracts) {
 		dc.btcClient = client
@@ -62,6 +70,7 @@ type Contracts struct {
 	net              common.NetType
 	wg               *sync.WaitGroup
 	cache            *outpoint_cache.Cache
+	rc               *cache.RedisCache
 	XudtType         *Info
 	UniqueType       *Info
 	SporeType        *Info
@@ -243,13 +252,20 @@ func (c *Contracts) GetSporeTypeScript(args []byte) *types.Script {
 //	return d.ContractTypeId.Hex() == codeHash.Hex()
 //}
 
-func (c *Contracts) GetBtcAddressByOutpoint(index uint32, txStr string) (address string, err error) {
+func (c *Contracts) GetBtcAddressByOutpoint(index uint32, txHashHex string) (address string, err error) {
+
+	//if addr, err := c.rc.GetBtcAddrCache(txHashHex, index); err != nil {
+	//	log.Errorf("GetBtcAddrCache err: %s", err.Error())
+	//} else if addr != "" {
+	//	fmt.Println("get btc addr cache :", txHashHex, index, addr)
+	//	return addr, nil
+	//}
+
 	// 示例交易哈希
-	txHash, err := chainhash.NewHashFromStr(txStr)
+	txHash, err := chainhash.NewHashFromStr(txHashHex)
 	if err != nil {
 		return "", fmt.Errorf("NewHashFromStr: %s", err.Error())
 	}
-
 	// 获取交易
 	log.Info("btc tx hash: ", txHash)
 	tx, err := c.btcClient.GetRawTransactionVerbose(txHash)
@@ -257,7 +273,6 @@ func (c *Contracts) GetBtcAddressByOutpoint(index uint32, txStr string) (address
 		log.Error("btc GetRawTransactionVerbose err: ", err.Error())
 		return "", fmt.Errorf("GetRawTransactionVerbose: %s", err.Error())
 	}
-
 	// 输出交易信息
 	if uint32(len(tx.Vout)) < index+1 {
 		return "", fmt.Errorf("index error")
@@ -266,19 +281,17 @@ func (c *Contracts) GetBtcAddressByOutpoint(index uint32, txStr string) (address
 	scriptPubKeyHex := targetCell.ScriptPubKey.Hex
 	scriptPubKey, err := hex.DecodeString(scriptPubKeyHex)
 	if err != nil {
-
 		return "", fmt.Errorf("Error decoding scriptPubKey: %s", err.Error())
-
 	}
-
 	_, addresses, _, err := txscript.ExtractPkScriptAddrs(scriptPubKey, &chaincfg.TestNet3Params)
 	if err != nil {
 		return "", fmt.Errorf("ExtractPkScriptAddrs err: %s", err.Error())
-
 	}
-
 	if len(addresses) == 0 {
 		return "", fmt.Errorf("address empty")
+	}
+	if err := c.rc.SetBtcAddrCache(txHashHex, addresses[0].EncodeAddress(), index); err != nil {
+		log.Errorf("SetBtcAddr err: %s", err.Error())
 	}
 	return addresses[0].EncodeAddress(), nil
 }
