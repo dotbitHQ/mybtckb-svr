@@ -19,7 +19,7 @@ func (t *TxTimer) doSyncSpore() error {
 		},
 		ScriptType: indexer.ScriptTypeType,
 	}
-	res, err := t.contracts.Client().GetCells(t.ctx, searchKey, indexer.SearchOrderDesc, 1000, "")
+	res, err := t.contracts.Client().GetCells(t.ctx, searchKey, indexer.SearchOrderDesc, 100, "")
 	if err != nil {
 		return fmt.Errorf("GetCells err:", err.Error())
 	}
@@ -32,9 +32,25 @@ func (t *TxTimer) doSyncSpore() error {
 	fmt.Println(len(res.Objects))
 	sporeList := make([]*tables.TableSpore, 0)
 	for _, v := range res.Objects {
-		owner, err := address.ConvertScriptToAddress(t.contracts.Mode(), v.Output.Lock)
-		if err != nil {
-			return fmt.Errorf("ConvertScriptToAddress err: %s", err.Error())
+		owner := ""
+		var addrType uint8
+		if v.Output.Lock.CodeHash == t.contracts.RGBPP.CodeHash && v.Output.Lock.HashType == t.contracts.RGBPP.HashType {
+			addrType = 1
+			fmt.Println("rgb ++ tx: ", v.OutPoint.TxHash.Hex())
+			args := v.Output.Lock.Args
+			index, txHash := common.GetOutpointByargs(args)
+			fmt.Println(txHash, "---", index)
+			owner = "btc"
+			//owner, err = t.contracts.GetBtcAddressByOutpoint(index, txHash)
+			//if err != nil {
+			//	continue
+			//	//return fmt.Errorf("GetBtcAddressByOutpoint err %s", err.Error())
+			//}
+		} else {
+			owner, err = address.ConvertScriptToAddress(t.contracts.Mode(), v.Output.Lock)
+			if err != nil {
+				return fmt.Errorf("ConvertScriptToAddress err: %s", err.Error())
+			}
 		}
 		sporeId := common.Bytes2Hex(v.Output.Type.Args)
 		data, err := molecule.SporeDataFromSlice(v.OutputData, true)
@@ -58,6 +74,7 @@ func (t *TxTimer) doSyncSpore() error {
 			ContentType: string(contentType),
 			Content:     content,
 			Outpoint:    common.OutPointStruct2String(v.OutPoint),
+			AddrType:    addrType,
 			BlockNum:    v.BlockNumber,
 		})
 	}

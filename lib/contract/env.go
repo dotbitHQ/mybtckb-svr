@@ -9,7 +9,7 @@ type TypeContractInfo struct {
 	HashType types.ScriptHashType
 }
 type Env struct {
-	Xudt, Spore, SporeCluster, UniqueCell *TypeContractInfo
+	Xudt, Spore, SporeCluster, RGBPP, UniqueCell *TypeContractInfo
 }
 
 var EnvMain = Env{
@@ -47,21 +47,27 @@ var EnvTest = Env{
 		HashType: types.HashTypeType,
 	},
 	Spore: &TypeContractInfo{
-		TxHash:   "0x06995b9fc19461a2bf9933e57b69af47a20bf0a5bc6c0ffcb85567a2c733f0a1",
+		TxHash:   "0x5e8d2a517d50fd4bb4d01737a7952a1f1d35c8afc77240695bb569cd7d9d5a1f",
 		Index:    0,
-		CodeHash: "0x5e063b4c0e7abeaa6a428df3b693521a3050934cf3b0ae97a800d1bc31449398",
+		CodeHash: "0x685a60219309029d01310311dba953d67029170ca4848a4ff638e57002130a0d",
 		HashType: types.HashTypeData1,
 	},
 	SporeCluster: &TypeContractInfo{
-		TxHash:   "0xfbceb70b2e683ef3a97865bb88e082e3e5366ee195a9c826e3c07d1026792fcd",
+		TxHash:   "0xcebb174d6e300e26074aea2f5dbd7f694bb4fe3de52b6dfe205e54f90164510a",
 		Index:    0,
-		CodeHash: "0x7366a61534fa7c7e6225ecc0d828ea3b5366adec2b58206f2ee84995fe030075",
+		CodeHash: "0x0bbe768b519d8ea7b96d58f1182eb7e6ef96c541fbd9526975077ee09f049058",
 		HashType: types.HashTypeData1,
 	},
 	UniqueCell: &TypeContractInfo{
 		TxHash:   "0xff91b063c78ed06f10a1ed436122bd7d671f9a72ef5f5fa28d05252c17cf4cef",
 		Index:    0,
 		CodeHash: "0x8e341bcfec6393dcd41e635733ff2dca00a6af546949f70c57a706c0f344df8b",
+		HashType: types.HashTypeType,
+	},
+	RGBPP: &TypeContractInfo{
+		TxHash:   "",
+		Index:    0,
+		CodeHash: "0x61ca7a4796a4eb19ca4f0d065cb9b10ddcf002f10f7cbb810c706cb6bb5c3248",
 		HashType: types.HashTypeType,
 	},
 }

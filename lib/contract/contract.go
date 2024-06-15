@@ -2,11 +2,18 @@ package contract
 
 import (
 	"context"
+	"encoding/hex"
 	"errors"
+	"fmt"
+	"github.com/btcsuite/btcd/chaincfg"
+	"github.com/btcsuite/btcd/chaincfg/chainhash"
+	"github.com/btcsuite/btcd/rpcclient"
+	"github.com/btcsuite/btcd/txscript"
 	"github.com/nervosnetwork/ckb-sdk-go/address"
 	"github.com/nervosnetwork/ckb-sdk-go/indexer"
 	"github.com/nervosnetwork/ckb-sdk-go/rpc"
 	"github.com/nervosnetwork/ckb-sdk-go/types"
+	log "github.com/sirupsen/logrus"
 	"mybtckb-svr/lib/common"
 	"mybtckb-svr/lib/outpoint_cache"
 	"sync"
@@ -20,12 +27,16 @@ var (
 
 type ContractsOption func(*Contracts)
 
-func WithClient(client rpc.Client) ContractsOption {
+func WithCkbClient(client rpc.Client) ContractsOption {
 	return func(dc *Contracts) {
 		dc.client = client
 	}
 }
-
+func WithBtcClient(client rpcclient.Client) ContractsOption {
+	return func(dc *Contracts) {
+		dc.btcClient = client
+	}
+}
 func WithNetType(net common.NetType) ContractsOption {
 	return func(dc *Contracts) {
 		dc.net = net
@@ -47,6 +58,7 @@ func WithCache(cache *outpoint_cache.Cache) ContractsOption {
 type Contracts struct {
 	ctx              context.Context
 	client           rpc.Client
+	btcClient        rpcclient.Client
 	net              common.NetType
 	wg               *sync.WaitGroup
 	cache            *outpoint_cache.Cache
@@ -54,6 +66,7 @@ type Contracts struct {
 	UniqueType       *Info
 	SporeType        *Info
 	SporeClusterType *Info
+	RGBPP            *Info
 }
 
 func NewContracts(ctx context.Context, opts ...ContractsOption) *Contracts {
@@ -174,6 +187,15 @@ func (c *Contracts) initContracts() error {
 		CodeHash: types.HexToHash(env.SporeCluster.CodeHash),
 		HashType: env.SporeCluster.HashType,
 	}
+	c.RGBPP = &Info{
+		OutPoint: &types.OutPoint{
+			TxHash: types.HexToHash(env.RGBPP.TxHash),
+			Index:  env.RGBPP.Index,
+		},
+		CodeHash: types.HexToHash(env.RGBPP.CodeHash),
+		HashType: env.RGBPP.HashType,
+	}
+
 	return nil
 }
 
@@ -220,3 +242,43 @@ func (c *Contracts) GetSporeTypeScript(args []byte) *types.Script {
 //func (d *Info) IsSameTypeId(codeHash types.Hash) bool {
 //	return d.ContractTypeId.Hex() == codeHash.Hex()
 //}
+
+func (c *Contracts) GetBtcAddressByOutpoint(index uint32, txStr string) (address string, err error) {
+	// 示例交易哈希
+	txHash, err := chainhash.NewHashFromStr(txStr)
+	if err != nil {
+		return "", fmt.Errorf("NewHashFromStr: %s", err.Error())
+	}
+
+	// 获取交易
+	log.Info("btc tx hash: ", txHash)
+	tx, err := c.btcClient.GetRawTransactionVerbose(txHash)
+	if err != nil {
+		log.Error("btc GetRawTransactionVerbose err: ", err.Error())
+		return "", fmt.Errorf("GetRawTransactionVerbose: %s", err.Error())
+	}
+
+	// 输出交易信息
+	if uint32(len(tx.Vout)) < index+1 {
+		return "", fmt.Errorf("index error")
+	}
+	targetCell := tx.Vout[index]
+	scriptPubKeyHex := targetCell.ScriptPubKey.Hex
+	scriptPubKey, err := hex.DecodeString(scriptPubKeyHex)
+	if err != nil {
+
+		return "", fmt.Errorf("Error decoding scriptPubKey: %s", err.Error())
+
+	}
+
+	_, addresses, _, err := txscript.ExtractPkScriptAddrs(scriptPubKey, &chaincfg.TestNet3Params)
+	if err != nil {
+		return "", fmt.Errorf("ExtractPkScriptAddrs err: %s", err.Error())
+
+	}
+
+	if len(addresses) == 0 {
+		return "", fmt.Errorf("address empty")
+	}
+	return addresses[0].EncodeAddress(), nil
+}

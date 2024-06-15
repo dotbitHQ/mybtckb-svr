@@ -80,6 +80,10 @@ type CfgServer struct {
 			ConcurrencyNum     uint64 `json:"concurrency_num" yaml:"concurrency_num"`
 			PrivateKey         string `json:"privateKey" yaml:"privateKey"`
 		} `json:"ckb" yaml:"ckb"`
+		Btc struct {
+			Url    string `json:"url" yaml:"url"`
+			ApiKey string `json:"api_key" yaml:"api_key"`
+		}
 	} `json:"chain" yaml:"chain"`
 	Stripe struct {
 		PremiumPercentage decimal.Decimal `json:"premium_percentage" yaml:"premium_percentage"`

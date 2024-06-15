@@ -41,7 +41,10 @@ func NewTxTimer(p TxTimerParam) *TxTimer {
 }
 
 func (t *TxTimer) Run() error {
-
+	//if err := t.doSyncSpore(); err != nil {
+	//	log.Error("doSyncSpore err: ", err.Error())
+	//}
+	//return nil
 	tickerXudtTxStatus := time.NewTicker(time.Second * 5)
 	tickerSporeTxStatus := time.NewTicker(time.Second * 5)
 	tickerCkbTxStatus := time.NewTicker(time.Second * 5)
