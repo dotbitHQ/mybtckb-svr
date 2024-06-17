@@ -16,7 +16,7 @@ func (b *BlockParser) MintXudt(req FuncTransactionHandleReq) error {
 	}
 	xudtInfo, err := contract.ParseXudtInfo(req.TxTypeData.OutputCell.Unique[0].OutputData)
 	if err != nil {
-		return fmt.Errorf("contract.ParseXudtInfo err: %s", err.Error())
+		return nil
 	}
 	//fmt.Println("-------------tx hash: ", req.TxHash)
 	//fmt.Println("-------------xudtInfo : ", xudtInfo)
