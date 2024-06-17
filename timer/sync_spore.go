@@ -29,7 +29,6 @@ func (t *TxTimer) doSyncSpore() error {
 		log.Info("Spore liveCells:", res.LastCursor, " length: ", len(res.Objects))
 
 		if len(res.Objects) == 0 || lastCursor == res.LastCursor {
-			fmt.Println("break", )
 			break
 		}
 		lastCursor = res.LastCursor
@@ -45,7 +44,7 @@ func (t *TxTimer) doSyncSpore() error {
 				//fmt.Println(txHash, "---", index)
 				btcOutpoint = common.OutPoint2String(txHash, uint(index))
 				//owner = "btc"
-				//owner, err = t.contracts.GetBtcAddressByOutpoint(index, txHash)
+				owner, err = t.contracts.GetBtcAddressByOutpoint(index, txHash)
 				//if err != nil {
 				//	continue
 				//	//return fmt.Errorf("GetBtcAddressByOutpoint err %s", err.Error())

@@ -254,12 +254,12 @@ func (c *Contracts) GetSporeTypeScript(args []byte) *types.Script {
 
 func (c *Contracts) GetBtcAddressByOutpoint(index uint32, txHashHex string) (address string, err error) {
 
-	//if addr, err := c.rc.GetBtcAddrCache(txHashHex, index); err != nil {
-	//	log.Errorf("GetBtcAddrCache err: %s", err.Error())
-	//} else if addr != "" {
-	//	fmt.Println("get btc addr cache :", txHashHex, index, addr)
-	//	return addr, nil
-	//}
+	if addr, err := c.rc.GetBtcAddrCache(txHashHex, index); err != nil {
+		log.Errorf("GetBtcAddrCache err: %s", err.Error())
+	} else if addr != "" {
+		fmt.Println("get btc addr cache :", txHashHex, index, addr)
+		return addr, nil
+	}
 
 	// 示例交易哈希
 	txHash, err := chainhash.NewHashFromStr(txHashHex)

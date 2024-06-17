@@ -121,6 +121,7 @@ func runServer(ctx *cli.Context) error {
 		DbDao:     dbDao,
 		Contracts: contracts,
 		Txtool:    txTool,
+		Rc:        rc,
 	})
 	if err = txTimer.Run(); err != nil {
 		return fmt.Errorf("txTimer.Run() err: %s", err.Error())

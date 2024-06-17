@@ -27,7 +27,7 @@ func (d *DbDao) GetSporeByClusterId(clusterId string, page, pageSize uint64) (li
 
 }
 func (d *DbDao) GetSporeByAddress(address string, page, pageSize uint64) (list []*tables.TableSpore, total int64, err error) {
-	err = d.db.Model(&tables.TableSpore{}).Where("address = ? ", address).Count(&total).Error
+	err = d.db.Model(&tables.TableSpore{}).Where("address = ?", address).Count(&total).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			err = nil

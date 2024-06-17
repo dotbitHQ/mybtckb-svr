@@ -17,7 +17,8 @@ import (
 
 type ReqUserXudtList struct {
 	api_code.PageData
-	Address string `json:"address" binding:"required"`
+	Address  string `json:"address" binding:"required"`
+	AddrType uint8  `json:"addr_type" "`
 }
 
 type RespUserXudtList struct {
@@ -74,46 +75,64 @@ func (h *HttpHandle) doUserXudtList(req *ReqUserXudtList, apiResp *api_code.ApiR
 	if req.PageSize == 0 {
 		req.PageSize = 20
 	}
-
-	parseAddr, err := address.Parse(req.Address)
-	if err != nil {
-		apiResp.ApiRespErr(api_code.ApiCodeParamsInvalid, "ckb_adress error")
-		return nil
-	}
-	searchKey := &indexer.SearchKey{
-		Script:     parseAddr.Script,
-		ScriptType: indexer.ScriptTypeLock,
-		Filter: &indexer.CellsFilter{
-			Script: &types.Script{
-				CodeHash: h.Contracts.XudtType.CodeHash,
-				HashType: types.HashTypeType,
-			},
-		},
-	}
-
-	res, err := h.Contracts.Client().GetCells(h.Ctx, searchKey, indexer.SearchOrderDesc, 1000, "")
-	if err != nil {
-		apiResp.ApiRespErr(api_code.ApiCodeNetError, "GetCells err")
-		return fmt.Errorf("GetCells err: %s", err.Error())
-	}
-	//发行xudt FAIR 0x79fa45b10a34cf767e9be38394ba62eb551988b3c8363b7d5ac5422af1071f13
-	//transfer xudt TEST 0x89230a87dc2b66b44a5dd8d3ef9e2bdbddfb776f5ec754298e76c11971ad7cad
-	if len(res.Objects) == 0 {
-		apiResp.ApiRespOK(resp)
-		return nil
-	}
-	fmt.Println(len(res.Objects))
-	//return
-	temp := make(map[string]uint128.Uint128)
-	for _, v := range res.Objects {
-		amount := uint128.Zero
-		if len(v.OutputData) != 16 {
-			continue
+	respTokenList := make([]TokenInfo, 0)
+	xudtAmount := make(map[string]uint128.Uint128)
+	if req.AddrType == 0 {
+		parseAddr, err := address.Parse(req.Address)
+		if err != nil {
+			apiResp.ApiRespErr(api_code.ApiCodeParamsInvalid, "ckb_adress error")
+			return nil
 		}
-		tokenId := common.Bytes2Hex(v.Output.Type.Args)
-		temp[tokenId] = temp[tokenId].Add(uint128.FromBytes(v.OutputData))
-		fmt.Println("0------amount: ", amount)
-		fmt.Println("==============")
+		searchKey := &indexer.SearchKey{
+			Script:     parseAddr.Script,
+			ScriptType: indexer.ScriptTypeLock,
+			Filter: &indexer.CellsFilter{
+				Script: &types.Script{
+					CodeHash: h.Contracts.XudtType.CodeHash,
+					HashType: types.HashTypeType,
+				},
+			},
+		}
+
+		res, err := h.Contracts.Client().GetCells(h.Ctx, searchKey, indexer.SearchOrderDesc, 1000, "")
+		if err != nil {
+			apiResp.ApiRespErr(api_code.ApiCodeNetError, "GetCells err")
+			return fmt.Errorf("GetCells err: %s", err.Error())
+		}
+		//发行xudt FAIR 0x79fa45b10a34cf767e9be38394ba62eb551988b3c8363b7d5ac5422af1071f13
+		//transfer xudt TEST 0x89230a87dc2b66b44a5dd8d3ef9e2bdbddfb776f5ec754298e76c11971ad7cad
+		if len(res.Objects) == 0 {
+			apiResp.ApiRespOK(resp)
+			return nil
+		}
+		fmt.Println(len(res.Objects))
+		//tokenId => amount
+
+		for _, v := range res.Objects {
+			amount := uint128.Zero
+			if len(v.OutputData) != 16 {
+				continue
+			}
+			tokenId := common.Bytes2Hex(v.Output.Type.Args)
+			xudtAmount[tokenId] = xudtAmount[tokenId].Add(uint128.FromBytes(v.OutputData))
+			fmt.Println("0------amount: ", amount)
+			fmt.Println("==============")
+		}
+
+	} else {
+		res, err := h.DbDao.GetRgbppXudtByAddr(req.Address)
+		if err != nil {
+			apiResp.ApiRespErr(api_code.ApiCodeDbError, "GetRgbppXudtByAddr err")
+			return err
+		}
+		for _, v := range res {
+			amount, err := uint128.FromString(v.Amount)
+			if err != nil {
+				apiResp.ApiRespErr(api_code.ApiCodeError500, "Get amount err")
+				return err
+			}
+			xudtAmount[v.TokenId] = xudtAmount[v.TokenId].Add(amount)
+		}
 	}
 
 	xudtInfoList, err := h.DbDao.GetXudtInfo()
@@ -126,9 +145,8 @@ func (h *HttpHandle) doUserXudtList(req *ReqUserXudtList, apiResp *api_code.ApiR
 	for _, v := range xudtInfoList {
 		tempXudtInfo[v.TokenId] = v
 	}
-
-	respTokenList := make([]TokenInfo, 0)
-	for k, v := range temp {
+	fmt.Println(12123123, xudtAmount)
+	for k, v := range xudtAmount {
 		tokenInfo := TokenInfo{
 			TokenId: k,
 			Amount:  v.String(),

@@ -1,9 +1,14 @@
 package dao
 
-import "mybtckb-svr/tables"
+import (
+	"gorm.io/gorm/clause"
+	"mybtckb-svr/tables"
+)
 
 func (d *DbDao) CreateXudtInfo(xudtInfo *tables.TableXudtInfo) (err error) {
-	return d.db.Create(xudtInfo).Error
+	return d.db.Clauses(clause.OnConflict{
+		DoUpdates: clause.AssignmentColumns([]string{"block_num", "outpoint", "name", "symbol", "decimal"}),
+	}).Create(xudtInfo).Error
 }
 
 func (d *DbDao) GetXudtInfo() (xudtInfoList []tables.TableXudtInfo, err error) {

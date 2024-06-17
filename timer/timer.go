@@ -6,9 +6,9 @@ import (
 
 	"github.com/robfig/cron/v3"
 	log "github.com/sirupsen/logrus"
+	"mybtckb-svr/lib/cache"
 	"mybtckb-svr/lib/contract"
 	"mybtckb-svr/txtool"
-
 	"sync"
 	"time"
 )
@@ -16,6 +16,7 @@ import (
 type TxTimer struct {
 	ctx       context.Context
 	wg        *sync.WaitGroup
+	rc        *cache.RedisCache
 	contracts *contract.Contracts
 	dbDao     *dao.DbDao
 	txTool    *txtool.TxTool
@@ -28,6 +29,7 @@ type TxTimerParam struct {
 	DbDao     *dao.DbDao
 	Contracts *contract.Contracts
 	Txtool    *txtool.TxTool
+	Rc        *cache.RedisCache
 }
 
 func NewTxTimer(p TxTimerParam) *TxTimer {
@@ -37,13 +39,14 @@ func NewTxTimer(p TxTimerParam) *TxTimer {
 	t.dbDao = p.DbDao
 	t.contracts = p.Contracts
 	t.txTool = p.Txtool
+	t.rc = p.Rc
 	return &t
 }
 
 func (t *TxTimer) Run() error {
 
-	//if err := t.doSyncRgbppSporeAddr(); err != nil {
-	//	log.Error("doSyncRgbppSporeAddr err: ", err.Error())
+	//if err := t.doSyncRgbppXudtAddr(); err != nil {
+	//	log.Error("doSyncRgbppXudtAddr err: ", err.Error())
 	//}
 	//return nil
 	tickerXudtTxStatus := time.NewTicker(time.Second * 5)
@@ -53,7 +56,10 @@ func (t *TxTimer) Run() error {
 	tickerSyncCluster := time.NewTicker(time.Minute * 10)
 	tickerSyncSpore := time.NewTicker(time.Minute * 12)
 	tickerSyncRgbppSporeAddr := time.NewTicker(time.Second * 20)
+	tickerSyncRgbppSporeClusterAddr := time.NewTicker(time.Second * 20)
 
+	tickerSyncRgbppXudt := time.NewTicker(time.Minute * 2)
+	tickerSyncRgbppXudtAddr := time.NewTicker(time.Second * 20)
 	t.wg.Add(1)
 	go func() {
 		for {
@@ -94,6 +100,24 @@ func (t *TxTimer) Run() error {
 					log.Error("doSyncRgbppSporeAddr err: ", err.Error())
 				}
 				log.Debug("doSyncRgbppSporeAddr end ...")
+			case <-tickerSyncRgbppSporeClusterAddr.C:
+				log.Debug("doSyncRgbppSporeClusterAddr start ...")
+				if err := t.doSyncRgbppSporeClusterAddr(); err != nil {
+					log.Error("doSyncRgbppSporeClusterAddr err: ", err.Error())
+				}
+				log.Debug("doSyncRgbppSporeClusterAddr end ...")
+			case <-tickerSyncRgbppXudt.C:
+				log.Debug("doSyncRgbppXudt start ...")
+				if err := t.doSyncRgbppXudt(); err != nil {
+					log.Error("doSyncRgbppXudt err: ", err.Error())
+				}
+				log.Debug("doSyncRgbppXudt end ...")
+			case <-tickerSyncRgbppXudtAddr.C:
+				log.Debug("doSyncRgbppXudtAddr start ...")
+				if err := t.doSyncRgbppXudtAddr(); err != nil {
+					log.Error("doSyncRgbppXudtAddr err: ", err.Error())
+				}
+				log.Debug("doSyncRgbppXudtAddr end ...")
 			case <-t.ctx.Done():
 				log.Debug("timer done")
 				t.wg.Done()

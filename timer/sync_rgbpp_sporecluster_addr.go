@@ -2,21 +2,21 @@ package timer
 
 import (
 	"fmt"
-	"github.com/dotbitHQ/das-lib/common"
 	log "github.com/sirupsen/logrus"
+	"mybtckb-svr/lib/common"
 	"mybtckb-svr/tables"
 )
 
-func (t *TxTimer) doSyncRgbppSporeAddr() error {
-	rgbppSpore, err := t.dbDao.GetRgbppSporeWithEmptyAddr()
+func (t *TxTimer) doSyncRgbppSporeClusterAddr() error {
+	rgbppSporeCluster, err := t.dbDao.GetRgbppSporeClusterWithEmptyAddr()
 	if err != nil {
 		return fmt.Errorf("GetRgbppSporeWithEmptyAddr err :", err.Error())
 	}
-	fmt.Println("need update: ", len(rgbppSpore))
-	sporeList := make([]*tables.TableSpore, 0)
-	for _, v := range rgbppSpore {
+	fmt.Println("need update: ", len(rgbppSporeCluster))
+	sporeClusterList := make([]*tables.TableClusterInfo, 0)
+	for _, v := range rgbppSporeCluster {
 		if v.BtcOutpoint == "" {
-			log.Warn("rgbpp spore btcoutpoint is empty: ", v.SporeId, v.Outpoint, v.Id)
+			log.Warn("rgbpp spor_cluster btcoutpoint is empty: ", v.ClusterId, v.Outpoint, v.Id)
 			continue
 		}
 		fmt.Println("btc out point ", v.BtcOutpoint)
@@ -27,20 +27,19 @@ func (t *TxTimer) doSyncRgbppSporeAddr() error {
 			log.Errorf("GetBtcAddressByOutpoint err %s", err.Error())
 			continue
 		}
-		sporeList = append(sporeList, &tables.TableSpore{
-			SporeId:     v.SporeId,
+		sporeClusterList = append(sporeClusterList, &tables.TableClusterInfo{
+			ClusterId:   v.ClusterId,
 			BlockNum:    v.BlockNum,
 			Outpoint:    v.Outpoint,
 			BtcOutpoint: v.BtcOutpoint,
 			Address:     owner,
-			Content:     []byte{},
 		})
 	}
-	if len(sporeList) == 0 {
+	if len(sporeClusterList) == 0 {
 		return nil
 	}
-	fmt.Println("update : ", len(sporeList))
-	if err := t.dbDao.CreateSporeInfo(sporeList); err != nil {
+	fmt.Println("update : ", len(sporeClusterList))
+	if err := t.dbDao.CreateClusterInfo(sporeClusterList); err != nil {
 		return fmt.Errorf("CreateSporeInfo err: %s", err.Error())
 	}
 	return nil
